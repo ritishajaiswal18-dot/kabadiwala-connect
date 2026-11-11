@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp } from '../store.js'
+import { useApp } from '../store.jsx'
 import { BUYERS } from '../data.js'
 
 export default function Sell() {

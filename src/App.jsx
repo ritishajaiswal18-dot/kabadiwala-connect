@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp } from './store.js'
+import { useApp } from './store.jsx'
 import Home from './pages/Home.jsx'
 import Sell from './pages/Sell.jsx'
 import Ledger from './pages/Ledger.jsx'

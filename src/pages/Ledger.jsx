@@ -1,4 +1,4 @@
-import { useApp } from '../store.js'
+import { useApp } from '../store.jsx'
 
 export default function Ledger() {
   const { s, set, t, fmtDate } = useApp()

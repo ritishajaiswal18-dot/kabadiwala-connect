@@ -1,4 +1,4 @@
-import { useApp } from '../store.js'
+import { useApp } from '../store.jsx'
 import { BUYERS, CO2_FACTOR } from '../data.js'
 import LineChart from '../components/LineChart.jsx'
 

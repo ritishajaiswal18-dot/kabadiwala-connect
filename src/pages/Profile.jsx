@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useApp } from '../store.js'
+import { useApp } from '../store.jsx'
 
 export default function Profile() {
   const { s, set, t } = useApp()

@@ -1,4 +1,4 @@
-import { useApp } from '../store.js'
+import { useApp } from '../store.jsx'
 
 const RECYCLERS = [
   { id: 'r1', name: 'Recycler Demo A', category: 'Paper and cardboard', verified: true },
