@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 
 const translations = {
@@ -208,83 +209,194 @@ function translateText(value) {
   return result;
 }
 
-function translateNode(root) {
-  if (!root) return;
-
-  if (root.nodeType === Node.TEXT_NODE) {
-    const oldText = root.nodeValue;
-    if (oldText && oldText.trim()) {
-      const newText = translateText(oldText);
-      if (newText !== oldText) root.nodeValue = newText;
+function HindiTranslator() {
+  useEffect(() => {
+    const KEY = "kabadiwala_language";
+    if (!localStorage.getItem(KEY)) {
+      localStorage.setItem(KEY, "en");
     }
-    return;
-  }
 
-  if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_NODE) {
-    return;
-  }
+    let language = localStorage.getItem(KEY) === "hi" ? "hi" : "en";
 
-  if (root.nodeType === Node.ELEMENT_NODE &&
-      ["SCRIPT", "STYLE", "NOSCRIPT"].includes(root.tagName)) {
-    return;
-  }
+    const originals = new WeakMap();
+    const lastApplied = new WeakMap();
+    const originalAttributes = new WeakMap();
 
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const textNodes = [];
-  let current;
-  while ((current = walker.nextNode())) textNodes.push(current);
+    function processTextNode(node) {
+      if (!node || node.nodeType !== Node.TEXT_NODE) return;
 
-  for (const node of textNodes) {
-    const oldText = node.nodeValue;
-    if (oldText && oldText.trim()) {
-      const newText = translateText(oldText);
-      if (newText !== oldText) node.nodeValue = newText;
-    }
-  }
+      const current = node.nodeValue || "";
+      if (!current.trim()) return;
 
-  const elements = [];
-  if (root.nodeType === Node.ELEMENT_NODE) elements.push(root);
-  if (root.querySelectorAll) elements.push(...root.querySelectorAll("*"));
+      if (!originals.has(node)) {
+        originals.set(node, current);
+      } else if (current !== lastApplied.get(node)) {
+        // React changed the text: remember its new English source.
+        originals.set(node, current);
+      }
 
-  for (const element of elements) {
-    for (const attribute of ["placeholder", "title", "aria-label"]) {
-      const oldValue = element.getAttribute(attribute);
-      if (oldValue) {
-        const newValue = translateText(oldValue);
-        if (newValue !== oldValue) element.setAttribute(attribute, newValue);
+      const original = originals.get(node);
+      const desired = language === "hi" ? translateText(original) : original;
+
+      if (node.nodeValue !== desired) {
+        lastApplied.set(node, desired);
+        node.nodeValue = desired;
+      } else {
+        lastApplied.set(node, desired);
       }
     }
-  }
-}
 
-export default function HindiTranslator() {
-  useEffect(() => {
-    document.documentElement.lang = "hi";
-    document.title = "कबाड़ीवाला कनेक्ट | स्मार्ट कबाड़ प्रबंधन";
+    function processElement(root) {
+      if (!root) return;
 
-    translateNode(document.body);
+      if (root.nodeType === Node.TEXT_NODE) {
+        processTextNode(root);
+        return;
+      }
+
+      if (root.nodeType !== Node.ELEMENT_NODE &&
+          root.nodeType !== Node.DOCUMENT_NODE) return;
+
+      if (root.nodeType === Node.ELEMENT_NODE &&
+          ["SCRIPT", "STYLE", "NOSCRIPT"].includes(root.tagName)) return;
+
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) processTextNode(node);
+
+      const elements = [];
+      if (root.nodeType === Node.ELEMENT_NODE) elements.push(root);
+      if (root.querySelectorAll) elements.push(...root.querySelectorAll("*"));
+
+      for (const element of elements) {
+        for (const attribute of ["placeholder", "title", "aria-label"]) {
+          const current = element.getAttribute(attribute);
+          if (!current) continue;
+
+          let saved = originalAttributes.get(element);
+          if (!saved) {
+            saved = {};
+            originalAttributes.set(element, saved);
+          }
+
+          if (!(attribute in saved) || current !== saved[attribute].last) {
+            saved[attribute] = { original: current, last: current };
+          }
+
+          const original = saved[attribute].original;
+          const desired = language === "hi" ? translateText(original) : original;
+
+          if (current !== desired) {
+            saved[attribute].last = desired;
+            element.setAttribute(attribute, desired);
+          } else {
+            saved[attribute].last = desired;
+          }
+        }
+      }
+    }
+
+    function updateToggle() {
+      const existing = [...document.querySelectorAll("button,[role='button']")]
+        .find(el => {
+          const label = (el.textContent || "").trim();
+          return ["English", "हिन्दी", "हिंदी"].includes(label);
+        });
+
+      if (existing) {
+        existing.setAttribute("title",
+          language === "hi" ? "Switch to English" : "हिन्दी में बदलें");
+      }
+    }
+
+    function applyLanguage(nextLanguage) {
+      language = nextLanguage;
+      localStorage.setItem(KEY, language);
+      document.documentElement.lang = language;
+      document.title = language === "hi"
+        ? "कबाड़ीवाला कनेक्ट | स्मार्ट कबाड़ प्रबंधन"
+        : "Kabadiwala Connect | Smart Scrap Management";
+
+      processElement(document.body);
+      updateToggle();
+
+      const fallback = document.getElementById("kc-language-switch");
+      if (fallback) {
+        fallback.textContent = language === "hi"
+          ? "View in English"
+          : "हिन्दी में देखें";
+      }
+    }
+
+    function handleClick(event) {
+      const button = event.target.closest("button,[role='button']");
+      if (!button) return;
+
+      const label = (button.textContent || "").trim();
+      if (["English", "हिन्दी", "हिंदी"].includes(label)) {
+        event.preventDefault();
+        event.stopPropagation();
+        applyLanguage(language === "hi" ? "en" : "hi");
+      }
+    }
+
+    document.addEventListener("click", handleClick, true);
+
+    // Fallback language switch if the app has no language button.
+    function addFallbackIfNeeded() {
+      const hasExisting = [...document.querySelectorAll("button,[role='button']")]
+        .some(el => ["English", "हिन्दी", "हिंदी"].includes((el.textContent || "").trim()));
+
+      if (hasExisting || document.getElementById("kc-language-switch")) return;
+
+      const button = document.createElement("button");
+      button.id = "kc-language-switch";
+      button.type = "button";
+      button.textContent = language === "hi" ? "View in English" : "हिन्दी में देखें";
+      button.style.cssText = [
+        "position:fixed",
+        "right:20px",
+        "bottom:20px",
+        "z-index:999999",
+        "padding:11px 18px",
+        "border:1px solid #d5dfd5",
+        "border-radius:24px",
+        "background:#193e30",
+        "color:white",
+        "font-size:14px",
+        "font-weight:600",
+        "cursor:pointer",
+        "box-shadow:0 4px 15px rgba(0,0,0,.18)"
+      ].join(";");
+
+      button.addEventListener("click", () => {
+        applyLanguage(language === "hi" ? "en" : "hi");
+      });
+
+      document.body.appendChild(button);
+    }
 
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "characterData") {
-          translateNode(mutation.target);
+          processTextNode(mutation.target);
         }
 
         if (mutation.type === "childList") {
-          mutation.addedNodes.forEach((node) => translateNode(node));
+          mutation.addedNodes.forEach(node => processElement(node));
         }
 
         if (mutation.type === "attributes") {
-          const element = mutation.target;
-          const attribute = mutation.attributeName;
-          const oldValue = element.getAttribute(attribute);
-          if (oldValue) {
-            const newValue = translateText(oldValue);
-            if (newValue !== oldValue) element.setAttribute(attribute, newValue);
-          }
+          processElement(mutation.target);
         }
       }
+      addFallbackIfNeeded();
+      updateToggle();
     });
+
+    processElement(document.body);
+    addFallbackIfNeeded();
+    updateToggle();
 
     observer.observe(document.body, {
       childList: true,
@@ -294,8 +406,13 @@ export default function HindiTranslator() {
       attributeFilter: ["placeholder", "title", "aria-label"]
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("click", handleClick, true);
+    };
   }, []);
 
   return null;
 }
+
+export default HindiTranslator;
