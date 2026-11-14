@@ -222,6 +222,18 @@ By organizing transactions, payment records, and business insights in one place,
 
 ---
 
-## 👩‍💻 Contributing
 
-Contributions,
+## 👩‍💻 Contributors
+
+### Shubham Kumar ([@Shubhamkr4](https://github.com/Shubhamkr4))
+
+**Role:** Research & Documentation Contributor
+
+**Contributions:**
+- Contributed to the research and development planning of Kabadiwala Connect.
+- Researched the Indian scrap recycling ecosystem, material pricing, informal waste collection, and market challenges.
+- Participated in field research involving Raghav Enterprises and Bharat Scrap to understand real-world scrap pricing and trading practices.
+- Contributed to the project research paper, field interview documentation, and project report.
+- Supported the identification of practical features for digital scrap management, transparent pricing, and transaction record-keeping.
+
+**GitHub Profile:** [Shubhamkr4](https://github.com/Shubhamkr4)
