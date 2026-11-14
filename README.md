@@ -239,11 +239,11 @@ By organizing transactions, payment records, and business insights in one place,
 **GitHub Profile:** [Shubhamkr4](https://github.com/Shubhamkr4)
 
 
-Ritisha Jaiswal
+### Ritisha Jaiswal
 
-Role: Research Lead & Website Developer
+**Role:** Research Lead & Website Developer
 
-Key Contributions:
+**Key Contributions:**
 
 - Conducted extensive research on the problem statement, focusing on the challenges faced by the informal scrap collection sector and identifying opportunities for digital intervention.
 - Analysed the existing gaps in traditional scrap management practices to help shape the project's approach and proposed solution.
